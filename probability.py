@@ -4,7 +4,7 @@ import collections
 from random import randint
 from music21 import converter, instrument, note, chord, stream
 
-notes = []
+notes = set()
 files = []
 limit = 10
 chosen = set()
@@ -33,29 +33,47 @@ for i in range(0, limit):
 		notes_to_parse = parts.parts[0].recurse()
 	else: # file has notes in a flat structure
 		notes_to_parse = midi.flat.notes
-	
-	lastNote = None
+
+	songNotes = []
 	for element in notes_to_parse:
 		if isinstance(element, note.Note):
 			curNote = str(element.pitch)
-			if lastNote != None:
-				counts[(lastNote, curNote)] += 1
-				followers[lastNote].add(curNote)
-			lastNote = curNote
-			notes.append(curNote)
+			songNotes.append(curNote)
+			notes.add(curNote)
+		elif isinstance(element, chord.Chord):
+			curNote = '.'.join(str(n) for n in element.normalOrder)
+			songNotes.append(curNote)
+			notes.add(curNote)
+
+	for e in range(0, len(songNotes) - 1):
+		curNote = songNotes[e]
+		nextNote = songNotes[e+1]
+		counts[(curNote, nextNote)] += 1
+		followers[curNote].add(nextNote)
 
 # choose a starting point at random
 # for every other note, choose a random note out of those that come after the previous note
 offset = 0 # don't stack notes on top of each other
 output_notes = []
-cur = notes[randint(0, len(notes))]
+cur = (list(notes))[randint(0, len(notes))]
 for i in range(0, 50):
-	new_note = note.Note(cur)
-	new_note.offset = offset
-	new_note.storedInstrument = instrument.Piano()
-	output_notes.append(new_note)
+	if ('.' in cur) or cur.isdigit():
+	    notes_in_chord = cur.split('.')
+	    notes = []
+	    for current_note in notes_in_chord:
+	        new_note = note.Note(int(current_note))
+	        new_note.storedInstrument = instrument.Piano()
+	        notes.append(new_note)
+	    new_chord = chord.Chord(notes)
+	    new_chord.offset = offset
+	    output_notes.append(new_chord)
+	else:
+		new_note = note.Note(cur)
+		new_note.offset = offset
+		new_note.storedInstrument = instrument.Piano()
+		output_notes.append(new_note)
 
-	# 80% chance we just take the best note to follow, otherwise choose a random note from the note's followers
+	# 50% chance we just take the best note to follow, otherwise choose a random note from the note's followers
 	if randint(0, 1) == 1:
 		cur = max( [(counts[(cur, neighbor)], neighbor) for neighbor in followers[cur]] )[1]
 	else:

@@ -64,6 +64,8 @@ for i in range(0, LIMIT):
 	for e in range(0, len(notes_to_parse)):
 		if isinstance(notes_to_parse[e], note.Note):
 			notes.append(str(notes_to_parse[e].pitch))
+		elif isinstance(notes_to_parse[e], chord.Chord):
+		    notes.append('.'.join(str(n) for n in notes_to_parse[e].normalOrder))
 	for e in range(0, len(notes)-1):
 		curNote = notes[e]
 		nextNote = notes[e+1]
@@ -94,10 +96,21 @@ print(output)
 output_notes = []
 offset = 0 # don't stack notes on top of each other
 for cur in output:
-	new_note = note.Note(cur)
-	new_note.offset = offset
-	new_note.storedInstrument = instrument.Piano()
-	output_notes.append(new_note)
+	if ('.' in cur) or cur.isdigit():
+	    notes_in_chord = cur.split('.')
+	    notes = []
+	    for current_note in notes_in_chord:
+	        new_note = note.Note(int(current_note))
+	        new_note.storedInstrument = instrument.Piano()
+	        notes.append(new_note)
+	    new_chord = chord.Chord(notes)
+	    new_chord.offset = offset
+	    output_notes.append(new_chord)
+	else:
+		new_note = note.Note(cur)
+		new_note.offset = offset
+		new_note.storedInstrument = instrument.Piano()
+		output_notes.append(new_note)
 	offset += 0.5
 
 midi_stream = stream.Stream(output_notes)
