@@ -43,7 +43,7 @@ for file in os.listdir("data"):
 		files.append(file)
 
 for i in range(0, LIMIT):
-	file = files[i]
+	file = files[randint(0, len(files) - 1)]
 	midi = converter.parseFile("data/" + file)
 	notes_to_parse = None
 	parts = instrument.partitionByInstrument(midi)
@@ -63,7 +63,7 @@ for i in range(0, LIMIT):
 		nextNote = notes[e+1]
 		counts[(curNote, nextNote)] += 1
 		bitotalCounts[curNote]+=1
-		followers[nextNote].add(curNote)
+		followers[curNote].add(nextNote)
 
 		# if beginning note
 		if e == 0:

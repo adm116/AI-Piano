@@ -15,7 +15,7 @@ for file in os.listdir("data"):
 
 # choose limit files at random
 for i in range(0, limit):
-	file = files[i]
+	file = files[randint(0, len(files) - 1)]
 	midi = converter.parseFile("data/" + file)
 	notes_to_parse = None
 	parts = instrument.partitionByInstrument(midi)
@@ -38,7 +38,7 @@ offset = 0 # don't stack notes on top of each other
 output_notes = []
 notesList = list(notes)
 for i in range(0, 50):
-    cur = notesList[randint(0, len(notesList))]
+    cur = notesList[randint(0, len(notesList) - 1)]
     if ('.' in cur) or cur.isdigit():
 	    notes_in_chord = cur.split('.')
 	    notes = []
@@ -55,7 +55,7 @@ for i in range(0, 50):
         new_note.storedInstrument = instrument.Piano()
         output_notes.append(new_note)
 
-    cur = notesList[randint(0, len(notesList))]
+    cur = notesList[randint(0, len(notesList) - 1)]
     offset += 0.5
 
 midi_stream = stream.Stream(output_notes)
