@@ -8,6 +8,7 @@ from music21 import converter, instrument, note, chord, stream
 START = '#begin'
 LIMIT = 10
 NOTE_SIZE = 88 # num notes playable on piano
+NOTE_LIMIT = 50	# num notes in output
 
 ##############################################################################
 #Model
@@ -42,16 +43,7 @@ for file in os.listdir("data"):
 		files.append(file)
 
 for i in range(0, LIMIT):
-	# choose file at random, but only if not chosen already
-	filesIndex = 0
-	while True:
-		filesIndex = randint(0, len(files)-1)
-		if filesIndex not in chosen:
-			break
-	chosen.add(filesIndex)
-	file = files[filesIndex]
-
-	# parse it
+	file = files[i]
 	midi = converter.parseFile("data/" + file)
 	notes_to_parse = None
 	parts = instrument.partitionByInstrument(midi)
@@ -88,7 +80,7 @@ for cur in followers:
 ##############################################################################
 # solve problem
 ucs = util.UniformCostSearch(verbose=1)
-ucs.solve(MusicProblem(costs, 50, followers))
+ucs.solve(MusicProblem(costs, NOTE_LIMIT, followers))
 output = ucs.actions
 print(output)
 

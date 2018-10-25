@@ -7,15 +7,13 @@ from music21 import converter, instrument, note, chord, stream
 notes = set()
 files = []
 limit = 10
-followers = collections.defaultdict(set) 	# what notes follow me ?
-counts = collections.defaultdict(int)		# (lastNote, curNote) -> num occurences
 
 # find all files
 for file in os.listdir("data"):
 	if file.split(".")[-1] == 'mid':
 		files.append(file)
 
-# choose limit files at random and build up followers map
+# choose limit files at random
 for i in range(0, limit):
 	file = files[i]
 	midi = converter.parseFile("data/" + file)
@@ -30,26 +28,18 @@ for i in range(0, limit):
 	for element in notes_to_parse:
 		if isinstance(element, note.Note):
 			curNote = str(element.pitch)
-			songNotes.append(curNote)
 			notes.add(curNote)
 		elif isinstance(element, chord.Chord):
 			curNote = '.'.join(str(n) for n in element.normalOrder)
-			songNotes.append(curNote)
 			notes.add(curNote)
 
-	for e in range(0, len(songNotes) - 1):
-		curNote = songNotes[e]
-		nextNote = songNotes[e+1]
-		counts[(curNote, nextNote)] += 1
-		followers[curNote].add(nextNote)
-
-# choose a starting point at random
-# for every other note, choose a random note out of those that come after the previous note
+# choose all random notes
 offset = 0 # don't stack notes on top of each other
 output_notes = []
-cur = (list(notes))[randint(0, len(notes))]
+notesList = list(notes)
 for i in range(0, 50):
-	if ('.' in cur) or cur.isdigit():
+    cur = notesList[randint(0, len(notesList))]
+    if ('.' in cur) or cur.isdigit():
 	    notes_in_chord = cur.split('.')
 	    notes = []
 	    for current_note in notes_in_chord:
@@ -59,19 +49,14 @@ for i in range(0, 50):
 	    new_chord = chord.Chord(notes)
 	    new_chord.offset = offset
 	    output_notes.append(new_chord)
-	else:
-		new_note = note.Note(cur)
-		new_note.offset = offset
-		new_note.storedInstrument = instrument.Piano()
-		output_notes.append(new_note)
+    else:
+        new_note = note.Note(cur)
+        new_note.offset = offset
+        new_note.storedInstrument = instrument.Piano()
+        output_notes.append(new_note)
 
-	# 50% chance we just take the best note to follow, otherwise choose a random note from the note's followers
-	if randint(0, 1) == 1:
-		cur = max( [(counts[(cur, neighbor)], neighbor) for neighbor in followers[cur]] )[1]
-	else:
-		possibleNextNotes = [(counts[(cur, neighbor)], neighbor) for neighbor in followers[cur]]
-		cur = possibleNextNotes[randint(0, len(possibleNextNotes)-1)][1]
-	offset += 0.5
+    cur = notesList[randint(0, len(notesList))]
+    offset += 0.5
 
 midi_stream = stream.Stream(output_notes)
 midi_stream.write('midi', fp='test_output.mid')
