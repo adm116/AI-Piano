@@ -4,14 +4,14 @@ import tensorflow
 import numpy
 import pickle
 from music21 import converter, instrument, note, chord, stream
-from lstm import buildNetwork
-from lstm import getNetworkInputOuput
+from train import buildNetwork
+from train import getNetworkInputOuput
 
 NOTES = 200 # num notes generated
 
-def generateOutput(network_input, network_output, n_vocab, model):
+def generateOutput(network_input, n_vocab, model):
     # Load the weights to each node
-    model.load_weights('weights-improvement-02-4.6252-bigger.hdf5')
+    model.load_weights('weights/weights-improvement-01-4.6389-bigger.hdf5')
 
     pitchnames = sorted(set(item for item in notes))
     start = numpy.random.randint(0, len(network_input)-1)
@@ -64,6 +64,7 @@ if __name__ == '__main__':
     with open('data/notes', 'rb') as filepath:
         notes = pickle.load(filepath)
 
-    network_input, network_output = getNetworkInputOuput(notes)
-    prediction_output = generateOutput(network_input, network_output, len(notes), buildNetwork(network_input, len(notes)))
+    n_vocab = len(set(notes))
+    network_input, network_output = getNetworkInputOuput(notes, n_vocab)
+    prediction_output = generateOutput(network_input, n_vocab, buildNetwork(network_input, n_vocab))
     createMidi(prediction_output)

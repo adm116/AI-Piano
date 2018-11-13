@@ -12,12 +12,13 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import LSTM
 from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import Flatten
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ModelCheckpoint
 
-LIMIT = 16 # limit number of files read in for now
+LIMIT = 2 # limit number of files read in for now
 DATA_DIR = 'beethoven'
-EPOCHS = 15
+EPOCHS = 5
 
 def getFiles():
     files = []
@@ -41,20 +42,18 @@ def getNotes(files):
     	for element in notes_to_parse:
             # single note
     		if isinstance(element, note.Note):
-    			curNote = str(element.pitch)
-    			notes.append(curNote)
+    			notes.append(str(element.pitch))
             # chord
     		elif isinstance(element, chord.Chord):
-    			curNote = '.'.join(str(n) for n in element.normalOrder)
-    			notes.append(curNote)
+    			notes.append('.'.join(str(n) for n in element.normalOrder))
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
 
     return notes
 
-def getNetworkInputOuput(notes):
-    sequence_length = 100
+def getNetworkInputOuput(notes, n_vocab):
+    sequence_length = 50
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
     # create a dictionary to map pitches to integers
@@ -71,7 +70,7 @@ def getNetworkInputOuput(notes):
     # reshape the input into a format compatible with LSTM layers
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
     # normalize input
-    network_input = network_input / float(len(notes))
+    network_input = network_input / float(n_vocab)
     network_output = utils.to_categorical(network_output)
     return (network_input, network_output)
 
@@ -82,7 +81,6 @@ def buildNetwork(network_input, n_vocab):
     for the 1st layer (input tensor) we need to specify its shape (must have the same shape as training data)
     shape is inferred for future layers.... THIS IS WHAT WE CAN TUNE (add/remove layers, tune params)
     """
-
     model = Sequential() # linear stack of layers
 
     # Current model has: 3 LSTM layers, 3 Dropout layers, 2 Dense layers, 1 activation layer
@@ -91,20 +89,19 @@ def buildNetwork(network_input, n_vocab):
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
     )) # returns a sequence of vectors of dimension 512
-    model.add(Dropout(0.3)) # fraction of input units that should be dropped during training
-    model.add(LSTM(512, return_sequences=True)) # returns a sequence of vectors of dimension 512
-    model.add(Dropout(0.3))
-    model.add(LSTM(512)) # returns a single vector of dimension 512
-    model.add(Dense(256)) # Dense(x) is a fully-connected layer with x hidden units
-    model.add(Dropout(0.3))
-    model.add(Dense(151)) # (nb nodes last layer) = (nb of outputs in system) --> output of the network will map to pitches.
+    model.add(Dropout(0.5))
+    #model.add(LSTM(512, return_sequences=True))
+    #model.add(Dropout(0.3))
+    model.add(LSTM(512))
+    #model.add(Dropout(0.3))
+    model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
     return model
 
-def trainModel(network_input, network_output, n_vocab, model):
-    filepath = "weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
+def trainModel(network_input, network_output, model):
+    filepath = "weights/weights-improvement-{epoch:02d}-{loss:.4f}-bigger.hdf5"
 
     # use checkpoints to save weights of the network nodes after every epoch
     checkpoint = ModelCheckpoint(
@@ -124,6 +121,7 @@ def trainModel(network_input, network_output, n_vocab, model):
 
 if __name__ == '__main__':
     notes = getNotes(getFiles())
-    network_input, network_output = getNetworkInputOuput(notes)
-    model = buildNetwork(network_input, len(notes))
-    trainModel(network_input, network_output, len(notes), model)
+    n_vocab = len(set(notes))
+    network_input, network_output = getNetworkInputOuput(notes, n_vocab)
+    model = buildNetwork(network_input, n_vocab)
+    trainModel(network_input, network_output, model)
