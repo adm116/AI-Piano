@@ -24,8 +24,8 @@ def getFiles():
 def getNotes(files):
     pickle_notes = Path("data/notes")
     if my_file.is_file():
-	with open('data/notes', 'rb') as filepath:
-	    return pickle.load(filepath)
+        with open('data/notes', 'rb') as filepath:
+            return pickle.load(filepath)
 
     notes = []
     for i in range(0, LIMIT):
