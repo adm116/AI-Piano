@@ -10,6 +10,7 @@ from tensorflow.python.keras import utils
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import GRU
 from tensorflow.python.keras.callbacks import ModelCheckpoint
+from pathlib import Path
 LIMIT = 16 # limit number of files read in for now
 DATA_DIR = 'beethoven'
 EPOCHS = 50
@@ -23,7 +24,7 @@ def getFiles():
 
 def getNotes(files):
     pickle_notes = Path("data/notes")
-    if my_file.is_file():
+    if pickle_notes.is_file():
         with open('data/notes', 'rb') as filepath:
             return pickle.load(filepath)
 
