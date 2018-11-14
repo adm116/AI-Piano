@@ -6,16 +6,10 @@ import numpy
 import pickle
 from random import randint
 from music21 import converter, instrument, note, chord, stream
-from tensorflow.keras import utils
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import GRU
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.callbacks import ModelCheckpoint
-from tensorflow.keras.callbacks import ModelCheckpoint
-
+from tensorflow.python.keras import utils
+from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.layers import GRU
+from tensorflow.python.keras.callbacks import ModelCheckpoint
 LIMIT = 16 # limit number of files read in for now
 DATA_DIR = 'beethoven'
 EPOCHS = 50
@@ -28,6 +22,11 @@ def getFiles():
     return files
 
 def getNotes(files):
+    pickle_notes = Path("data/notes")
+    if my_file.is_file():
+	with open('data/notes', 'rb') as filepath:
+	    return pickle.load(filepath)
+
     notes = []
     for i in range(0, LIMIT):
     	file = files[i]
