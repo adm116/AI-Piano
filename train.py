@@ -42,10 +42,10 @@ def getNotes(files):
     	for element in notes_to_parse:
             # single note
     		if isinstance(element, note.Note):
-    			notes.append((str(element.pitch), element.duration.quarterLength))
+    			notes.append(str(element.pitch))
             # chord
     		elif isinstance(element, chord.Chord):
-    			notes.append(('.'.join(str(n) for n in element.normalOrder), element.duration.quarterLength))
+    			notes.append('.'.join(str(n) for n in element.normalOrder))
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
@@ -55,9 +55,9 @@ def getNotes(files):
 def getNetworkInputOuput(notes, n_vocab):
     sequence_length = 50
     # get all pitch names
-    pitchnames = sorted(set((item, offset) for item, offset in notes))
+    pitchnames = sorted(set(item for item in notes))
     # create a dictionary to map pitches to integers
-    note_to_int = dict((pair, number) for number, pair in enumerate(pitchnames))
+    note_to_int = dict((item, number) for number, item in enumerate(pitchnames))
 
     network_input = []
     network_output = []
@@ -65,7 +65,7 @@ def getNetworkInputOuput(notes, n_vocab):
     for i in range(0, len(notes) - sequence_length, 1):
         sequence_in = notes[i:i + sequence_length]
         sequence_out = notes[i + sequence_length]
-        network_input.append([note_to_int[(char, offset)] for char, offset in sequence_in])
+        network_input.append([note_to_int[char] for char in sequence_in])
         network_output.append(note_to_int[sequence_out])
 
     n_patterns = len(network_input)
