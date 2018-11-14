@@ -84,7 +84,7 @@ def buildNetwork(network_input, n_vocab):
     shape is inferred for future layers.... THIS IS WHAT WE CAN TUNE (add/remove layers, tune params)
     """
     model = Sequential() # linear stack of layers
-    model.add(GRU(n_vocab))
+    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2])))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 
