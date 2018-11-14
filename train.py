@@ -16,9 +16,9 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ModelCheckpoint
 
-LIMIT = 2 # limit number of files read in for now
+LIMIT = 5 # limit number of files read in for now
 DATA_DIR = 'beethoven'
-EPOCHS = 5
+EPOCHS = 10
 
 def getFiles():
     files = []
@@ -42,10 +42,10 @@ def getNotes(files):
     	for element in notes_to_parse:
             # single note
     		if isinstance(element, note.Note):
-    			notes.append(str(element.pitch))
+    			notes.append((str(element.pitch), element.duration.quarterLength))
             # chord
     		elif isinstance(element, chord.Chord):
-    			notes.append('.'.join(str(n) for n in element.normalOrder))
+    			notes.append(('.'.join(str(n) for n in element.normalOrder), element.duration.quarterLength))
 
     with open('data/notes', 'wb') as filepath:
         pickle.dump(notes, filepath)
@@ -55,22 +55,24 @@ def getNotes(files):
 def getNetworkInputOuput(notes, n_vocab):
     sequence_length = 50
     # get all pitch names
-    pitchnames = sorted(set(item for item in notes))
+    pitchnames = sorted(set((item, offset) for item, offset in notes))
     # create a dictionary to map pitches to integers
-    note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
+    note_to_int = dict((pair, number) for number, pair in enumerate(pitchnames))
+
     network_input = []
     network_output = []
     # create input sequences and the corresponding outputs
     for i in range(0, len(notes) - sequence_length, 1):
         sequence_in = notes[i:i + sequence_length]
         sequence_out = notes[i + sequence_length]
-        network_input.append([note_to_int[char] for char in sequence_in])
+        network_input.append([note_to_int[(char, offset)] for char, offset in sequence_in])
         network_output.append(note_to_int[sequence_out])
+
     n_patterns = len(network_input)
     # reshape the input into a format compatible with LSTM layers
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
     # normalize input
-    network_input = network_input / float(n_vocab)
+    #network_input = network_input / float(n_vocab)
     network_output = utils.to_categorical(network_output)
     return (network_input, network_output)
 
@@ -82,22 +84,15 @@ def buildNetwork(network_input, n_vocab):
     shape is inferred for future layers.... THIS IS WHAT WE CAN TUNE (add/remove layers, tune params)
     """
     model = Sequential() # linear stack of layers
-
-    # Current model has: 3 LSTM layers, 3 Dropout layers, 2 Dense layers, 1 activation layer
     model.add(LSTM(
-        512, # number of nodes in each later (NEED TO CHANGE)
+        n_vocab,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
-    )) # returns a sequence of vectors of dimension 512
-    model.add(Dropout(0.5))
-    #model.add(LSTM(512, return_sequences=True))
-    #model.add(Dropout(0.3))
-    model.add(LSTM(512))
-    #model.add(Dropout(0.3))
+    ))
+    model.add(Dropout(0.75))
+    model.add(LSTM(n_vocab))
     model.add(Dense(n_vocab))
-    model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
-
     return model
 
 def trainModel(network_input, network_output, model):
