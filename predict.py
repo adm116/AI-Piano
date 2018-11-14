@@ -11,14 +11,13 @@ NOTES = 200 # num notes generated
 
 def generateOutput(network_input, n_vocab, model):
     # Load the weights to each node
-    model.load_weights('weights/weights-improvement-01-4.6388-bigger.hdf5')
+    model.load_weights('weights/weights-improvement-20-6.4649-bigger.hdf5')
 
     pitchnames = sorted(set(item for item in notes))
     start = numpy.random.randint(0, len(network_input)-1)
     int_to_note = dict((number, note) for number, note in enumerate(pitchnames))
     pattern = network_input[start]
 
-    print(network_input[0])
     prediction_output = []
     for note_index in range(NOTES):
         print(pattern)
