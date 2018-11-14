@@ -1,5 +1,6 @@
 
 import os
+import sys
 import tensorflow
 import numpy
 import pickle
@@ -11,7 +12,8 @@ NOTES = 200 # num notes generated
 
 def generateOutput(network_input, n_vocab, model):
     # Load the weights to each node
-    model.load_weights('weights/weights-improvement-20-6.4649-bigger.hdf5')
+    weights = sys.argv[1]
+    model.load_weights(weights)
 
     pitchnames = sorted(set(item for item in notes))
     start = numpy.random.randint(0, len(network_input)-1)
