@@ -16,9 +16,9 @@ from tensorflow.keras.layers import Flatten
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.callbacks import ModelCheckpoint
 
-LIMIT = 5 # limit number of files read in for now
+LIMIT = 16 # limit number of files read in for now
 DATA_DIR = 'beethoven'
-EPOCHS = 10
+EPOCHS = 50
 
 def getFiles():
     files = []
@@ -53,7 +53,7 @@ def getNotes(files):
     return notes
 
 def getNetworkInputOuput(notes, n_vocab):
-    sequence_length = 50
+    sequence_length = 100
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
     # create a dictionary to map pitches to integers
@@ -85,13 +85,18 @@ def buildNetwork(network_input, n_vocab):
     """
     model = Sequential() # linear stack of layers
     model.add(LSTM(
-        n_vocab,
+        512,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
     ))
-    model.add(Dropout(0.75))
-    model.add(LSTM(n_vocab))
+    model.add(Dropout(0.3))
+    model.add(LSTM(512, return_sequence = True))
+    model.add(Dropout(0.3))
+    model.add(LSTM(512))
+    model.add(Dense(256))
+    model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
+    model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 
