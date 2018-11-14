@@ -72,7 +72,7 @@ def getNetworkInputOuput(notes, n_vocab):
     # reshape the input into a format compatible with LSTM layers
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
     # normalize input
-    #network_input = network_input / float(n_vocab)
+    network_input = network_input / float(n_vocab)
     network_output = utils.to_categorical(network_output)
     return (network_input, network_output)
 
@@ -84,7 +84,7 @@ def buildNetwork(network_input, n_vocab):
     shape is inferred for future layers.... THIS IS WHAT WE CAN TUNE (add/remove layers, tune params)
     """
     model = Sequential() # linear stack of layers
-    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2])))
+    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 

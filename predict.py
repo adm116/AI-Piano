@@ -22,7 +22,7 @@ def generateOutput(network_input, n_vocab, model):
     for note_index in range(NOTES):
         print(pattern)
         prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
-        #prediction_input = prediction_input / float(n_vocab)
+        prediction_input = prediction_input / float(n_vocab)
         prediction = model.predict(prediction_input, verbose=0)
         index = numpy.argmax(prediction)
         result = int_to_note[index]
