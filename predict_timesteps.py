@@ -20,15 +20,17 @@ def generateOutput(network_input, n_vocab, model):
 
     prediction_output = []
     for note_index in range(NOTES):
-        print(pattern)
         prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
         #prediction_input = prediction_input / float(n_vocab)
         prediction = model.predict(prediction_input, verbose=0)
-        index = numpy.argmax(prediction)
-        result = int_to_note[index]
+        #index = numpy.argmax(prediction)
+        test = numpy.argpartition(prediction[0], -3)[-3:]
+        index = numpy.random.choice(test, 1, p=[0.34, 0.33, 0.33])
+        result = int_to_note[index[0]]
         prediction_output.append(result)
         pattern = numpy.append(pattern, index)
         pattern = pattern[1:len(pattern)]
+        print(pattern)
 
     return prediction_output
 
