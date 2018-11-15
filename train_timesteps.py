@@ -26,11 +26,6 @@ def getFiles():
     return files
 
 def getNotes(files):
-    pickle_notes = Path(DATA_DIR + '/notes_timesteps')
-    if pickle_notes.is_file():
-        with open(DATA_DIR + '/notes_timesteps', 'rb') as filepath:
-            return pickle.load(filepath)
-
     timesteps = collections.defaultdict(list)
     last = 0
     for i in range(0, LIMIT):
