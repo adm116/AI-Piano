@@ -8,10 +8,12 @@ from train import buildNetwork
 from train import getNetworkInputOuput
 
 NOTES = 200 # num notes generated
+DATA_DIR = 'beethoven'
 
 def generateOutput(network_input, n_vocab, model):
     # Load the weights to each node
-    model.load_weights('weights/weights-improvement-20-6.4649-bigger.hdf5')
+    weights = sys.argv[1]
+    model.load_weights(weights)
 
     pitchnames = sorted(set(item for item in notes))
     start = numpy.random.randint(0, len(network_input)-1)
@@ -23,10 +25,8 @@ def generateOutput(network_input, n_vocab, model):
         prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
         #prediction_input = prediction_input / float(n_vocab)
         prediction = model.predict(prediction_input, verbose=0)
-        #index = numpy.argmax(prediction)
-        test = numpy.argpartition(prediction[0], -3)[-3:]
-        index = numpy.random.choice(test, 1, p=[0.34, 0.33, 0.33])
-        result = int_to_note[index[0]]
+        index = numpy.argmax(prediction)
+        result = int_to_note[index]
         prediction_output.append(result)
         pattern = numpy.append(pattern, index)
         pattern = pattern[1:len(pattern)]
@@ -62,10 +62,10 @@ def createMidi(prediction_output):
         offset += 0.5
 
     midi_stream = stream.Stream(output_notes)
-    midi_stream.write('midi', fp='test_output.mid')
+    midi_stream.write('midi', fp='test_output_timesteps.mid')
 
 if __name__ == '__main__':
-    with open('data/notes', 'rb') as filepath:
+    with open(DATA_DIR + 'notes_timesteps', 'rb') as filepath:
         notes = pickle.load(filepath)
 
     n_vocab = len(set(notes))
