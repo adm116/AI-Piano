@@ -13,8 +13,6 @@ from tensorflow.python.keras.layers import GRU
 from tensorflow.python.keras.callbacks import ModelCheckpoint
 from pathlib import Path
 
-LIMIT = 16 # limit number of files read in for now
-
 # specify directory of data, of pickle notes, of weights, num epocks, sequence length
 DATA_DIR = sys.argv[1]
 PICKLE_NOTES = sys.argv[2]
@@ -38,7 +36,7 @@ def getNotes(files):
             return pickle.load(filepath)
 
     notes = []
-    for i in range(0, LIMIT):
+    for i in range(0, len(files)):
         file = files[i]
         midi = converter.parseFile(DATA_DIR + '/' + file)
         notes_to_parse = None
