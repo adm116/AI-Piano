@@ -34,25 +34,28 @@ def getNotes(files):
     timesteps = collections.defaultdict(list)
     last = 0
     for i in range(0, LIMIT):
-    	file = files[i]
-    	midi = converter.parseFile(DATA_DIR + '/' + file)
-    	notes_to_parse = None
-    	parts = instrument.partitionByInstrument(midi)
-    	if parts: # file has instrument parts
-    		notes_to_parse = parts.parts[0].recurse()
-    	else: # file has notes in a flat structure
-    		notes_to_parse = midi.flat.notes
+        file = files[i]
+        midi = converter.parseFile(DATA_DIR + '/' + file)
+        notes_to_parse = None
+        parts = instrument.partitionByInstrument(midi)
+        if parts: # file has instrument parts
+        	notes_to_parse = parts.parts[0].recurse()
+        else: # file has notes in a flat structure
+        	notes_to_parse = midi.flat.notes
 
-    	for element in notes_to_parse:
+        lastNote = None
+        for element in notes_to_parse:
             # single note
             if isinstance(element, note.Note):
                 cur_note = str(element.pitch)
+                lastNote = element
                 timesteps[last + element.offset].append(cur_note)
             # chord
             elif isinstance(element, chord.Chord):
+                lastNote = element
                 for n in element.normalOrder:
                     timesteps[last + element.offset].append(str(n))
-                    last = element.offset + 0.5
+        last = last + lastNote.offset + 0.5
 
     notes = []
     for time in timesteps.keys():
