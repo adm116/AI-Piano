@@ -32,7 +32,7 @@ def getFiles():
 
 def getNotes(files):
     pickle_notes = Path(PICKLE_NOTES)
-    if NEW_PICKLE_NOTES == 'true' and pickle_notes.is_file():
+    if NEW_PICKLE_NOTES == 'false' and pickle_notes.is_file():
         print('Using previous notes')
         with open(PICKLE_NOTES, 'rb') as filepath:
             return pickle.load(filepath)
