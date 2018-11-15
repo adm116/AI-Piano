@@ -4,22 +4,19 @@ import collections
 import tensorflow
 import numpy
 import pickle
+from pathlib import Path
 from random import randint
 from music21 import converter, instrument, note, chord, stream
 from tensorflow.keras import utils
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import LSTM
-from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.layers import GRU
 from tensorflow.keras.callbacks import ModelCheckpoint
 
 LIMIT = 10 # limit number of files read in for now
 DATA_DIR = 'beethoven'
 EPOCHS = 20
 NOTES_PER_TIMESTEP = 3
+SEQ_LEN = 20
 
 def getFiles():
     files = []
@@ -29,7 +26,13 @@ def getFiles():
     return files
 
 def getNotes(files):
+    pickle_notes = Path(DATA_DIR + '/notes_timesteps')
+    if pickle_notes.is_file():
+        with open(DATA_DIR + '/notes_timesteps', 'rb') as filepath:
+            return pickle.load(filepath)
+
     timesteps = collections.defaultdict(list)
+    last = 0
     for i in range(0, LIMIT):
     	file = files[i]
     	midi = converter.parseFile(DATA_DIR + '/' + file)
@@ -44,11 +47,12 @@ def getNotes(files):
             # single note
             if isinstance(element, note.Note):
                 cur_note = str(element.pitch)
-                timesteps[element.offset].append(cur_note)
+                timesteps[last + element.offset].append(cur_note)
             # chord
             elif isinstance(element, chord.Chord):
                 for n in element.normalOrder:
-                    timesteps[element.offset].append(str(n))
+                    timesteps[last + element.offset].append(str(n))
+                    last = element.offset + 0.5
 
     notes = []
     for time in timesteps.keys():
@@ -61,14 +65,13 @@ def getNotes(files):
             chosen = sorted(cur_notes)
             notes.append('.'.join(n for n in chosen))
 
-    with open('data/notes', 'wb') as filepath:
+    with open(DATA_DIR + '/notes_timesteps', 'wb') as filepath:
         pickle.dump(notes, filepath)
 
     print(notes)
     return notes
 
 def getNetworkInputOuput(notes, n_vocab):
-    sequence_length = 100
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
     # create a dictionary to map pitches to integers
@@ -77,15 +80,15 @@ def getNetworkInputOuput(notes, n_vocab):
     network_input = []
     network_output = []
     # create input sequences and the corresponding outputs
-    for i in range(0, len(notes) - sequence_length, 1):
-        sequence_in = notes[i:i + sequence_length]
-        sequence_out = notes[i + sequence_length]
+    for i in range(0, len(notes) - SEQ_LEN, 1):
+        sequence_in = notes[i:i + SEQ_LEN]
+        sequence_out = notes[i + SEQ_LEN]
         network_input.append([note_to_int[char] for char in sequence_in])
         network_output.append(note_to_int[sequence_out])
 
     n_patterns = len(network_input)
     # reshape the input into a format compatible with LSTM layers
-    network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
+    network_input = numpy.reshape(network_input, (n_patterns, SEQ_LEN, 1))
     # normalize input
     #network_input = network_input / float(n_vocab)
     network_output = utils.to_categorical(network_output)
@@ -99,19 +102,7 @@ def buildNetwork(network_input, n_vocab):
     shape is inferred for future layers.... THIS IS WHAT WE CAN TUNE (add/remove layers, tune params)
     """
     model = Sequential() # linear stack of layers
-    model.add(LSTM(
-        512,
-        input_shape=(network_input.shape[1], network_input.shape[2]),
-        return_sequences=True
-    ))
-    model.add(Dropout(0.3))
-    model.add(LSTM(512, return_sequences=True))
-    model.add(Dropout(0.3))
-    model.add(LSTM(512))
-    model.add(Dense(256))
-    model.add(Dropout(0.3))
-    model.add(Dense(n_vocab))
-    model.add(Activation('softmax'))
+    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 

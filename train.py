@@ -14,6 +14,7 @@ from pathlib import Path
 LIMIT = 16 # limit number of files read in for now
 DATA_DIR = 'beethoven'
 EPOCHS = 50
+SEQ_LEN = 100
 
 def getFiles():
     files = []
@@ -53,7 +54,6 @@ def getNotes(files):
     return notes
 
 def getNetworkInputOuput(notes, n_vocab):
-    sequence_length = 100
     # get all pitch names
     pitchnames = sorted(set(item for item in notes))
     # create a dictionary to map pitches to integers
@@ -62,15 +62,15 @@ def getNetworkInputOuput(notes, n_vocab):
     network_input = []
     network_output = []
     # create input sequences and the corresponding outputs
-    for i in range(0, len(notes) - sequence_length, 1):
-        sequence_in = notes[i:i + sequence_length]
-        sequence_out = notes[i + sequence_length]
+    for i in range(0, len(notes) - SEQ_LEN, 1):
+        sequence_in = notes[i:i + SEQ_LEN]
+        sequence_out = notes[i + SEQ_LEN]
         network_input.append([note_to_int[char] for char in sequence_in])
         network_output.append(note_to_int[sequence_out])
 
     n_patterns = len(network_input)
     # reshape the input into a format compatible with LSTM layers
-    network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
+    network_input = numpy.reshape(network_input, (n_patterns, SEQ_LEN, 1))
     # normalize input
     network_input = network_input / float(n_vocab)
     network_output = utils.to_categorical(network_output)
