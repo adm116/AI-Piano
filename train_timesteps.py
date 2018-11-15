@@ -12,7 +12,7 @@ from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import GRU
 from tensorflow.python.keras.callbacks import ModelCheckpoint
 
-LIMIT = 10 # limit number of files read in for now
+LIMIT = 16 # limit number of files read in for now
 DATA_DIR = 'beethoven'
 EPOCHS = 20
 NOTES_PER_TIMESTEP = 3
