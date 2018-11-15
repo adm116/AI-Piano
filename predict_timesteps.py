@@ -1,11 +1,11 @@
-
+import sys
 import os
 import tensorflow
 import numpy
 import pickle
 from music21 import converter, instrument, note, chord, stream
-from train import buildNetwork
-from train import getNetworkInputOuput
+from train_timesteps import buildNetwork
+from train_timesteps import getNetworkInputOuput
 
 NOTES = 200 # num notes generated
 DATA_DIR = 'beethoven'
@@ -65,7 +65,7 @@ def createMidi(prediction_output):
     midi_stream.write('midi', fp='test_output_timesteps.mid')
 
 if __name__ == '__main__':
-    with open(DATA_DIR + 'notes_timesteps', 'rb') as filepath:
+    with open(DATA_DIR + '/notes_timesteps', 'rb') as filepath:
         notes = pickle.load(filepath)
 
     n_vocab = len(set(notes))
