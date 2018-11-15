@@ -7,10 +7,10 @@ import pickle
 from pathlib import Path
 from random import randint
 from music21 import converter, instrument, note, chord, stream
-from tensorflow.keras import utils
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import GRU
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.python.keras import utils
+from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.layers import GRU
+from tensorflow.python.keras.callbacks import ModelCheckpoint
 
 LIMIT = 10 # limit number of files read in for now
 DATA_DIR = 'beethoven'
