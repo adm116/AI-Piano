@@ -9,69 +9,55 @@ from tensorflow.python.keras import utils
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import GRU
 
-PICKLE_NOTES = sys.argv[1]
-WEIGHTS = sys.argv[2]
-NOTES = int(sys.argv[3]) # num notes to generated
-SEQ_LEN = 100
-OUTPUT = sys.argv[4]
+PICKLE_NOTES = sys.argv[1]      # note file for where to read pickle data from
+WEIGHTS = sys.argv[2]           # weight file to load from
+NOTES = int(sys.argv[3])        # num notes to generated
+OUTPUT = sys.argv[4]            # directory to put the output
+SEQ_LEN = int(sys.argv[5])      # sequence length of inputs
 
-def generateOutput(network_input, n_vocab, model):
+def generateOutput(network_input, n_vocab, model, pitchnames):
     # Load the weights to each node
-    model.load_weights(WEIGHTS)
-    pitchnames = sorted(set(item for item in notes))
     start = numpy.random.randint(0, len(network_input)-1)
     int_to_note = dict((number, note) for number, note in enumerate(pitchnames))
     pattern = network_input[start]
 
     prediction_output = []
     for note_index in range(NOTES):
-        print(pattern)
-        prediction_input = numpy.reshape(pattern, (1, len(pattern), 1))
+        prediction_input = numpy.reshape(pattern, (1, SEQ_LEN, 1))
         prediction_input = prediction_input / float(n_vocab)
-        prediction = model.predict(prediction_input, verbose=0)
+        prediction = model.predict(prediction_input, batch_size=64, verbose=0)
         index = numpy.argmax(prediction)
+        print(index)
         result = int_to_note[index]
         prediction_output.append(result)
         pattern = numpy.append(pattern, index)
-        pattern = pattern[1:len(pattern)]
+        pattern = pattern[1:]
 
     return prediction_output
 
-def getNetworkInputOuput(notes, n_vocab):
+def getNetworkInputOuput(notes, n_vocab, pitchnames):
     """ Prepare the sequences used by the Neural Network """
     sequence_length = SEQ_LEN
-
-    # get all pitch names
-    pitchnames = sorted(set(item for item in notes))
 
      # create a dictionary to map pitches to integers
     note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
 
-    network_input = []
-    network_output = []
-
     # create input sequences and the corresponding outputs
+    network_input = []
     for i in range(0, len(notes) - sequence_length, 1):
         sequence_in = notes[i:i + sequence_length]
-        sequence_out = notes[i + sequence_length]
         network_input.append([note_to_int[char] for char in sequence_in])
-        network_output.append(note_to_int[sequence_out])
 
     n_patterns = len(network_input)
 
     # reshape the input into a format compatible with LSTM layers
-    network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
-    # normalize input
-    network_input = network_input / float(n_vocab)
-
-    network_output = utils.to_categorical(network_output)
-
-    return (network_input, network_output)
+    return numpy.reshape(network_input, (n_patterns, sequence_length, 1))
 
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    model.load_weights(WEIGHTS)
     return model
 
 def createMidi(prediction_output):
@@ -106,11 +92,15 @@ def createMidi(prediction_output):
         os.makedirs(OUTPUT)
     midi_stream.write('midi', fp= OUTPUT + '/output.mid')
 
-if __name__ == '__main__':
+def generate():
     with open(PICKLE_NOTES, 'rb') as filepath:
         notes = pickle.load(filepath)
 
     n_vocab = len(set(notes))
-    network_input, network_output = getNetworkInputOuput(notes, n_vocab)
-    prediction_output = generateOutput(network_input, n_vocab, buildNetwork(network_input, n_vocab))
+    pitchnames = sorted(set(item for item in notes))
+    network_input = getNetworkInputOuput(notes, n_vocab, pitchnames)
+    prediction_output = generateOutput(network_input, n_vocab, buildNetwork(network_input, n_vocab), pitchnames)
     createMidi(prediction_output)
+
+if __name__ == '__main__':
+    generate()
