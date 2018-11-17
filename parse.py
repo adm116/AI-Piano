@@ -88,4 +88,5 @@ for n in freq.keys():
 plt.plot(x, y, '.')
 plt.ylabel('number of occurences')
 plt.xlabel('note')
-plt.show()
+plt.savefig(DATA_DIR + 'graph')
+#plt.show()
