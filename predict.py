@@ -9,13 +9,13 @@ from tensorflow.python.keras import utils
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import GRU
 
-DATA_DIR = sys.argv[1]
-PICKLE_NOTES = DATA_DIR + '/notes'                  # note file for where to read pickle data from
+DATA_DIR = sys.argv[1]                              # data directory
 WEIGHTS = 'weights/' + DATA_DIR + '/' + sys.argv[2] # weight file to load from
 NOTES = int(sys.argv[3])                            # num notes to generate
-OUTPUT = 'output/' + DATA_DIR                       # directory to put the output
 SEQ_LEN = int(sys.argv[4])                          # sequence length of inputs
 BATCH = int(sys.argv[5])                            # batch size
+PICKLE_NOTES = DATA_DIR + '/notes'                  # note file for where to read pickle data from
+OUTPUT = 'output/' + DATA_DIR                       # directory to put the output
 
 def generateOutput(network_input, n_vocab, model, pitchnames):
     # Load the weights to each node

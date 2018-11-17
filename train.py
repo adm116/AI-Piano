@@ -15,44 +15,11 @@ from tensorflow.python.keras.callbacks import ModelCheckpoint
 from pathlib import Path
 
 DATA_DIR = sys.argv[1]                      # data directory
+EPOCHS = int(sys.argv[2])                   # number of epochs
+SEQ_LEN = int(sys.argv[3])                  # sequence length of inputs
+BATCH = int(sys.argv[4])                    # batch size
 PICKLE_NOTES = DATA_DIR + '/notes'          # note file to put pickle info
 WEIGHTS_PATH = 'weights/' + DATA_DIR        # path for where to put weights
-USE_PICKLE_NOTES = sys.argv[2] == 'true'    # false if don't want to read from old pickle file else true
-EPOCHS = int(sys.argv[3])                   # number of epochs
-SEQ_LEN = int(sys.argv[4])                  # sequence length of inputs
-HAS_LIMIT = sys.argv[5] == 'true'           # true if want to limit num files else false for all files
-BATCH = int(sys.argv[6])                    # batch size
-
-def getNotes():
-    pickle_notes = Path(PICKLE_NOTES)
-    if USE_PICKLE_NOTES and pickle_notes.is_file():
-        print('Using previous notes stored')
-        with open(PICKLE_NOTES, 'rb') as filepath:
-            return pickle.load(filepath)
-
-    notes = []
-    end = 16 if HAS_LIMIT else len(files)
-    for file in glob.glob(DATA_DIR + '/*.mid'):
-        print("Parsing %s" % file)
-        midi = converter.parseFile(file)
-        notes_to_parse = None
-        try: # file has instrument parts
-            s2 = instrument.partitionByInstrument(midi)
-            notes_to_parse = s2.parts[0].recurse()
-        except: # file has notes in a flat structure
-            notes_to_parse = midi.flat.notes
-
-        for element in notes_to_parse:
-            if isinstance(element, note.Note):
-                notes.append(str(element.pitch))
-            elif isinstance(element, chord.Chord):
-                notes.append('.'.join(str(n) for n in element.normalOrder))
-
-
-    with open(PICKLE_NOTES, 'wb') as filepath:
-        pickle.dump(notes, filepath)
-
-    return notes
 
 def getNetworkInputOuput(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
@@ -112,7 +79,9 @@ def trainModel(network_input, network_output, model):
     model.fit(network_input, network_output, epochs=EPOCHS, batch_size=BATCH, callbacks=callbacks_list)
 
 def train():
-    notes = getNotes()
+    with open(PICKLE_NOTES, 'rb') as filepath:
+        notes = pickle.load(filepath)
+
     n_vocab = len(set(notes))
     network_input, network_output = getNetworkInputOuput(notes, n_vocab)
     model = buildNetwork(network_input, n_vocab)

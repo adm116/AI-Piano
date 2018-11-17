@@ -9,9 +9,12 @@ from pathlib import Path
 from music21 import converter, instrument, note, chord, stream, interval, pitch
 from pathlib import Path
 
-DATA_DIR = sys.argv[1]  # data directory
-PICKLE_NOTES = DATA_DIR + '/notes'                     # note file to put pickle info
+DATA_DIR = sys.argv[1]                          # data directory
 USE_PICKLE_NOTES = sys.argv[2] == 'true'        # false if don't want to read from old pickle file else true
+HAS_LIMIT = sys.argv[3] == 'true'               # true if want to limit num files else false for all files
+if HAS_LIMIT:
+    LIMIT = int(sys.argv[4])                    # if want a limit, this is the number of files
+PICKLE_NOTES = DATA_DIR + '/notes'              # note file to put pickle info
 
 
 def isEighthNoteOffset(element):
@@ -24,8 +27,15 @@ def getNotes():
         with open(PICKLE_NOTES, 'rb') as filepath:
             return pickle.load(filepath)
 
-    notes = []
+    files = []
     for file in glob.glob(DATA_DIR + '/*.mid'):
+        files.append(file)
+
+    if HAS_LIMIT:
+        files = numpy.random.choice(files, LIMIT)
+
+    notes = []
+    for file in files:
         midi = converter.parseFile(file)
         key = midi.analyze('key')
         tonic = note.Note(pitch=key.pitchFromDegree(1))
