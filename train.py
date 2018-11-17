@@ -21,6 +21,7 @@ USE_PICKLE_NOTES = sys.argv[2] == 'true'    # false if don't want to read from o
 EPOCHS = int(sys.argv[3])                   # number of epochs
 SEQ_LEN = int(sys.argv[4])                  # sequence length of inputs
 HAS_LIMIT = sys.argv[5] == 'true'           # true if want to limit num files else false for all files
+BATCH = int(sys.argv[6])                    # batch size
 
 def getNotes():
     pickle_notes = Path(PICKLE_NOTES)
@@ -108,13 +109,14 @@ def trainModel(network_input, network_output, model):
     # 2nd param: list of input sequences' respective outputs
     # 3rd param: nb epochs = nb iterations (200 used in tutorial)
     # 4th param: nb of samples in the batch propagated through network
-    model.fit(network_input, network_output, epochs=EPOCHS, batch_size=64, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=EPOCHS, batch_size=BATCH, callbacks=callbacks_list)
 
 def train():
     notes = getNotes()
     n_vocab = len(set(notes))
     network_input, network_output = getNetworkInputOuput(notes, n_vocab)
     model = buildNetwork(network_input, n_vocab)
+    print("Training model...")
     trainModel(network_input, network_output, model)
 
 if __name__ == '__main__':

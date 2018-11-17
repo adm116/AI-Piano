@@ -15,6 +15,7 @@ WEIGHTS = 'weights/' + DATA_DIR + '/' + sys.argv[2] # weight file to load from
 NOTES = int(sys.argv[3])                            # num notes to generate
 OUTPUT = 'output/' + DATA_DIR                       # directory to put the output
 SEQ_LEN = int(sys.argv[4])                          # sequence length of inputs
+BATCH = int(sys.argv[5])                            # batch size
 
 def generateOutput(network_input, n_vocab, model, pitchnames):
     # Load the weights to each node
