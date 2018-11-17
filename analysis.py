@@ -14,7 +14,7 @@ PICKLE_NOTES = DATA_DIR + '/notes'                     # note file to put pickle
 USE_PICKLE_NOTES = sys.argv[2] == 'true'        # false if don't want to read from old pickle file else true
 
 
-def isEighthNote(element):
+def isEighthNoteOffset(element):
     return element.offset % 1 == 0 or element.offset + 0.5 % 1 == 0
 
 def getNotes():
@@ -27,10 +27,10 @@ def getNotes():
     notes = []
     for file in glob.glob(DATA_DIR + '/*.mid'):
         midi = converter.parseFile(file)
-        #key = midi.analyze('key')
-        #tonic = note.Note(pitch=key.pitchFromDegree(1))
-        #i = interval.Interval(tonic, note.Note('C'))
-        #midi = midi.transpose(i)
+        key = midi.analyze('key')
+        tonic = note.Note(pitch=key.pitchFromDegree(1))
+        i = interval.Interval(tonic, note.Note('C'))
+        midi = midi.transpose(i)
 
         notes_to_parse = None
         parts = instrument.partitionByInstrument(midi)
@@ -42,9 +42,9 @@ def getNotes():
         songNotes = []
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
-            if isinstance(element, note.Note) and isEighthNote(element):
+            if isinstance(element, note.Note) and isEighthNoteOffset(element):
                 offsets[element.offset].append(str(element.pitch))
-            elif isinstance(element, chord.Chord) and isEighthNote(element):
+            elif isinstance(element, chord.Chord) and isEighthNoteOffset(element):
                 offsets[element.offset].append('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])))
 
         for offset in offsets.keys():
