@@ -27,10 +27,10 @@ def generateOutput(network_input, n_vocab, model, pitchnames):
     for note_index in range(NOTES):
         prediction_input = numpy.reshape(pattern, (1, SEQ_LEN, 1))
         prediction_input = prediction_input / float(n_vocab)
-        prediction = model.predict(prediction_input, batch_size=64, verbose=0)
+        prediction = model.predict(prediction_input, batch_size=BATCH, verbose=0)
         index = numpy.argmax(prediction)
-        print(index)
         result = int_to_note[index]
+        print(result)
         prediction_output.append(result)
         pattern = numpy.append(pattern, index)
         pattern = pattern[1:]
