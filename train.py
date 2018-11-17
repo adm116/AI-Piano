@@ -1,6 +1,7 @@
 
 import os
 import sys
+import glob
 import collections
 import tensorflow
 import numpy
@@ -13,33 +14,26 @@ from tensorflow.python.keras.layers import GRU
 from tensorflow.python.keras.callbacks import ModelCheckpoint
 from pathlib import Path
 
-DATA_DIR = sys.argv[1]              # data directory
-PICKLE_NOTES = sys.argv[2]          # note file to put pickle info
-WEIGHTS_PATH = sys.argv[3]          # path for where to put weights
-NEW_PICKLE_NOTES = sys.argv[4]      # false if don't want to read from old pickle file
-EPOCHS = int(sys.argv[5])           # number of epochs
-SEQ_LEN = int(sys.argv[6])          # sequence length of inputs
-LIMIT = sys.argv[7]                 # limit number of files read in
+DATA_DIR = sys.argv[1]                      # data directory
+PICKLE_NOTES = DATA_DIR + '/notes'          # note file to put pickle info
+WEIGHTS_PATH = 'weights/' + DATA_DIR        # path for where to put weights
+USE_PICKLE_NOTES = sys.argv[2] == 'true'    # false if don't want to read from old pickle file else true
+EPOCHS = int(sys.argv[3])                   # number of epochs
+SEQ_LEN = int(sys.argv[4])                  # sequence length of inputs
+HAS_LIMIT = sys.argv[5] == 'true'           # true if want to limit num files else false for all files
 
-def getFiles():
-    files = []
-    for file in os.listdir(DATA_DIR):
-    	if file.split(".")[-1] == 'mid':
-    		files.append(file)
-    return files
-
-def getNotes(files):
+def getNotes():
     pickle_notes = Path(PICKLE_NOTES)
-    if NEW_PICKLE_NOTES == 'false' and pickle_notes.is_file():
-        print('Using previous notes')
+    if USE_PICKLE_NOTES and pickle_notes.is_file():
+        print('Using previous notes stored')
         with open(PICKLE_NOTES, 'rb') as filepath:
             return pickle.load(filepath)
 
     notes = []
-    end = 16 if LIMIT == 'true' else len(files)
-    for i in range(0, end):
-        file = files[i]
-        midi = converter.parseFile(DATA_DIR + '/' + file)
+    end = 16 if HAS_LIMIT else len(files)
+    for file in glob.glob(DATA_DIR + '/*.mid'):
+        print("Parsing %s" % file)
+        midi = converter.parseFile(file)
         notes_to_parse = None
         try: # file has instrument parts
             s2 = instrument.partitionByInstrument(midi)
@@ -80,14 +74,10 @@ def getNetworkInputOuput(notes, n_vocab):
         network_output.append(note_to_int[sequence_out])
 
     n_patterns = len(network_input)
-
-    # reshape the input into a format compatible with LSTM layers
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
     # normalize input
     network_input = network_input / float(n_vocab)
-
     network_output = utils.to_categorical(network_output)
-
     return (network_input, network_output)
 
 
@@ -95,7 +85,6 @@ def getNetworkInputOuput(notes, n_vocab):
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 
@@ -122,7 +111,7 @@ def trainModel(network_input, network_output, model):
     model.fit(network_input, network_output, epochs=EPOCHS, batch_size=64, callbacks=callbacks_list)
 
 def train():
-    notes = getNotes(getFiles())
+    notes = getNotes()
     n_vocab = len(set(notes))
     network_input, network_output = getNetworkInputOuput(notes, n_vocab)
     model = buildNetwork(network_input, n_vocab)

@@ -9,11 +9,12 @@ from tensorflow.python.keras import utils
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import GRU
 
-PICKLE_NOTES = sys.argv[1]      # note file for where to read pickle data from
-WEIGHTS = sys.argv[2]           # weight file to load from
-NOTES = int(sys.argv[3])        # num notes to generated
-OUTPUT = sys.argv[4]            # directory to put the output
-SEQ_LEN = int(sys.argv[5])      # sequence length of inputs
+DATA_DIR = sys.argv[1]
+PICKLE_NOTES = DATA_DIR + '/notes'                  # note file for where to read pickle data from
+WEIGHTS = 'weights/' + DATA_DIR + '/' + sys.argv[2] # weight file to load from
+NOTES = int(sys.argv[3])                            # num notes to generate
+OUTPUT = 'output/' + DATA_DIR + '/output.mid'       # directory to put the output
+SEQ_LEN = int(sys.argv[4])                          # sequence length of inputs
 
 def generateOutput(network_input, n_vocab, model, pitchnames):
     # Load the weights to each node
@@ -90,7 +91,7 @@ def createMidi(prediction_output):
 
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
-    midi_stream.write('midi', fp= OUTPUT + '/output.mid')
+    midi_stream.write('midi', fp= OUTPUT)
 
 def generate():
     with open(PICKLE_NOTES, 'rb') as filepath:

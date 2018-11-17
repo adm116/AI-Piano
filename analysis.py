@@ -1,28 +1,27 @@
 import collections
 import os
+import glob
+import sys
 import pickle
+import matplotlib.pyplot as plt
 from pathlib import Path
 from music21 import converter, instrument, note, chord, stream
+from pathlib import Path
 
-info = []
+DATA_DIR = sys.argv[1]  # data directory
+PICKLE_NOTES = DATA_DIR + '/notes'                     # note file to put pickle info
+USE_PICKLE_NOTES = sys.argv[2] == 'true'        # false if don't want to read from old pickle file else true
 
-pickle_notes = Path("data/notes_analysis")
-if not pickle_notes.is_file():
-    print("True")
-    with open('data/notes', 'rb') as filepath:
-        info = pickle.load(filepath)
+def getNotes():
+    pickle_notes = Path(PICKLE_NOTES)
+    if USE_PICKLE_NOTES and pickle_notes.is_file():
+        print('Using previous notes stored')
+        with open(PICKLE_NOTES, 'rb') as filepath:
+            return pickle.load(filepath)
 
-else:
-    files = []
-    for file in os.listdir('beethoven'):
-        if file.split(".")[-1] == 'mid':
-        	files.append(file)
-
-    # choose limit files at random
-    freq = collections.defaultdict(int)
     notes = []
-    for file in files:
-        midi = converter.parseFile("beethoven/" + file)
+    for file in glob.glob(DATA_DIR + '/*.mid'):
+        midi = converter.parseFile(file)
         notes_to_parse = None
         parts = instrument.partitionByInstrument(midi)
         if parts: # file has instrument parts
@@ -33,30 +32,30 @@ else:
         songNotes = []
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                curNote = str(element.pitch)
-                freq[curNote] += 1
-                notes.append(curNote)
+                notes.append(str(element.pitch))
             elif isinstance(element, chord.Chord):
-                curNote = '.'.join(str(n) for n in element.normalOrder)
-                freq[curNote] += 1
-                notes.append(curNote)
+                notes.append('.'.join(str(n) for n in element.normalOrder))
 
-    sequence_length = 10
-    seq = collections.defaultdict(int)
-    for i in range(0, len(notes) - sequence_length, 1):
-        sequence_in = '.'.join(notes[i:i + sequence_length])
-        sequence_out = notes[i + sequence_length]
-        seq[(sequence_in, sequence_out)] += 1
+    with open(PICKLE_NOTES, 'wb') as filepath:
+        pickle.dump(notes, filepath)
 
-    info.append(freq)
-    info.append(seq)
+    return notes
 
-    # dump all analysis
-    with open('data/notes_analysis', 'wb') as filepath:
-        pickle.dump(info, filepath)
 
-freq = info[0]
-seq = info[1]
-sorted_freq = sorted([(freq[n], n) for n in freq.keys()])
-sorted_seq = sorted([(seq[s], s) for s in seq.keys()])
-print(sorted_freq, sorted_seq)
+notes = getNotes()
+pitchnames = sorted(set(item for item in notes))
+note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
+freq = collections.defaultdict(int)
+for n in notes:
+    freq[note_to_int[n]] += 1
+
+x = []
+y = []
+for n in freq.keys():
+    x.append(n)
+    y.append(freq[n])
+
+plt.plot(x, y, '.')
+plt.ylabel('number of occurences')
+plt.xlabel('note')
+plt.show()
