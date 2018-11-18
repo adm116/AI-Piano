@@ -24,6 +24,9 @@ SHOW_GRAPH = args.graph.lower() == 'true'
 PICKLE_NOTES = DATA_DIR + '/notes'
 
 
+def isEighthNoteOffset(element):
+    return element.offset % 1 == 0 or element.offset + 0.5 % 1 == 0
+
 def getNotes():
     pickle_notes = Path(PICKLE_NOTES)
     if USE_OLD_NOTES and pickle_notes.is_file():
@@ -41,6 +44,13 @@ def getNotes():
     notes = []
     for file in files:
         midi = converter.parseFile(file)
+
+        # transpose
+        key = midi.analyze('key')
+        transposeKey = 'A' if key.mode == 'minor' else 'C'
+        i = interval.Interval(note.Note(key.tonicPitchNameWithCase), note.Note(transposeKey))
+        midi = midi.transpose(i)
+
         notes_to_parse = None
         parts = instrument.partitionByInstrument(midi)
         if parts: # file has instrument parts
@@ -50,10 +60,21 @@ def getNotes():
 
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
-            if isinstance(element, note.Note);
-                notes.append(str(curNote.pitch))
-            elif isinstance(element, chord.Chord):
-                notes.append('.'.join(sorted([str(note.Note(n).pitch) for n in curChord.normalOrder])))
+            if isinstance(element, note.Note) and isEighthNoteOffset(element):
+                curNote = element.transpose(i)
+                offsets[element.offset].append(str(curNote.pitch))
+            elif isinstance(element, chord.Chord) and isEighthNoteOffset(element):
+                curChord = element.transpose(i)
+                offsets[element.offset].append('.'.join(sorted([str(note.Note(n).pitch) for n in curChord.normalOrder])))
+
+        for offset in offsets.keys():
+            choices = sorted(offsets[offset])
+            if len(choices) > 3:
+                chosen = numpy.random.choice(choices, 3)
+                notes.append('.'.join(str(n) for n in chosen))
+            else:
+                notes.append('.'.join(str(n) for n in choices))
+
 
     with open(PICKLE_NOTES, 'wb') as filepath:
         pickle.dump(notes, filepath)
