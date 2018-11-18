@@ -23,7 +23,7 @@ WEIGHTS = 'weights/' + DATA_DIR + '/' + args.weights
 NUM_NOTES = args.num_notes
 SEQ_LEN = args.seq_len
 BATCH = args.batch_size
-PICKLE_NOTES = DATA_DIR + '/notes'                      
+PICKLE_NOTES = DATA_DIR + '/notes'
 OUTPUT = 'output/' + DATA_DIR
 
 def generateOutput(network_input, n_vocab, model, pitchnames):

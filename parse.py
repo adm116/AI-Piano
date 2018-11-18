@@ -44,9 +44,11 @@ def getNotes():
     notes = []
     for file in files:
         midi = converter.parseFile(file)
+
+        # transpose
         key = midi.analyze('key')
-        tonic = note.Note(pitch=key.pitchFromDegree(1))
-        i = interval.Interval(tonic, note.Note('C'))
+        transposeKey = 'A' if key.mode == 'minor' else 'C'
+        i = interval.Interval(note.Note(key.tonicPitchNameWithCase), note.Note(transposeKey))
         midi = midi.transpose(i)
 
         notes_to_parse = None
@@ -56,13 +58,14 @@ def getNotes():
         else: # file has notes in a flat structure
         	notes_to_parse = midi.flat.notes
 
-        songNotes = []
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
             if isinstance(element, note.Note) and isEighthNoteOffset(element):
-                offsets[element.offset].append(str(element.pitch))
+                curNote = element.transpose(i)
+                offsets[element.offset].append(str(curNote.pitch))
             elif isinstance(element, chord.Chord) and isEighthNoteOffset(element):
-                offsets[element.offset].append('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])))
+                curChord = element.transpose(i)
+                offsets[element.offset].append('.'.join(sorted([str(note.Note(n).pitch) for n in curChord.normalOrder])))
 
         for offset in offsets.keys():
             choices = sorted(offsets[offset])
@@ -90,19 +93,18 @@ def graph(freq):
     x = []
     y = []
     for n in freq.keys():
-        x.append(n)
         y.append(freq[n])
 
-    plt.plot(x, y, '.')
+    plt.plot(sorted(y), '.')
     plt.ylabel('number of occurences')
-    plt.xlabel('note')
-    if SHOW_GRAPH:
-        plt.show()
+    plt.xlabel('tokens sorted by freq')
+    plt.show()
 
 def parse():
     notes = getNotes()
     freq = getFreq(notes)
-    graph(freq)
+    if SHOW_GRAPH:
+        graph(freq)
 
 if __name__ == '__main__':
     parse()
