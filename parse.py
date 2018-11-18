@@ -14,6 +14,9 @@ USE_PICKLE_NOTES = sys.argv[2] == 'true'        # false if don't want to read fr
 HAS_LIMIT = sys.argv[3] == 'true'               # true if want to limit num files else false for all files
 if HAS_LIMIT:
     LIMIT = int(sys.argv[4])                    # if want a limit, this is the number of files
+    SHOW_GRAPH = sys.argv[5] == 'true'          # whether or not to show the frequency graph
+else:
+    SHOW_GRAPH = sys.argv[4] == 'true'
 PICKLE_NOTES = DATA_DIR + '/notes'              # note file to put pickle info
 
 
@@ -88,5 +91,5 @@ for n in freq.keys():
 plt.plot(x, y, '.')
 plt.ylabel('number of occurences')
 plt.xlabel('note')
-plt.savefig(DATA_DIR + 'graph')
-#plt.show()
+if SHOW_GRAPH:
+    plt.show()
