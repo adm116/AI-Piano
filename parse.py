@@ -51,9 +51,9 @@ def getNotes():
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append(str(curNote.pitch))
+                notes.append(str(element.pitch))
             elif isinstance(element, chord.Chord):
-                notes.append('.'.join(sorted([str(note.Note(n).pitch) for n in curChord.normalOrder])))
+                notes.append('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])))
 
     with open(PICKLE_NOTES, 'wb') as filepath:
         pickle.dump(notes, filepath)
