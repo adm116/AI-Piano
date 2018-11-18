@@ -50,7 +50,7 @@ def getNotes():
 
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
-            if isinstance(element, note.Note);
+            if isinstance(element, note.Note):
                 notes.append(str(curNote.pitch))
             elif isinstance(element, chord.Chord):
                 notes.append('.'.join(sorted([str(note.Note(n).pitch) for n in curChord.normalOrder])))
