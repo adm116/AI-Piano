@@ -6,6 +6,7 @@ import collections
 import tensorflow
 import numpy
 import pickle
+import argparse
 from random import randint
 from music21 import converter, instrument, note, chord, stream
 from tensorflow.python.keras import utils
@@ -14,10 +15,17 @@ from tensorflow.python.keras.layers import GRU
 from tensorflow.python.keras.callbacks import ModelCheckpoint
 from pathlib import Path
 
-DATA_DIR = sys.argv[1]                      # data directory
-EPOCHS = int(sys.argv[2])                   # number of epochs
-SEQ_LEN = int(sys.argv[3])                  # sequence length of inputs
-BATCH = int(sys.argv[4])                    # batch size
+parser = argparse.ArgumentParser()
+parser.add_argument('--dir', help="a directory", type= str)
+parser.add_argument('--epochs', help="number of epochs", type= int, default=200)
+parser.add_argument('--seq_len', help="length of sequences", type= int, default=100)
+parser.add_argument('--batch_size', help="batch size", type= int, default=128)
+args = parser.parse_args(sys.argv[1:])
+
+DATA_DIR = args.dir
+EPOCHS = args.epochs
+SEQ_LEN = args.seq_len
+BATCH = args.batch_size
 PICKLE_NOTES = DATA_DIR + '/notes'          # note file to put pickle info
 WEIGHTS_PATH = 'weights/' + DATA_DIR        # path for where to put weights
 
@@ -71,11 +79,6 @@ def trainModel(network_input, network_output, model):
         mode='min'
     )
     callbacks_list = [checkpoint]
-
-    # 1st param: list of input sequences prepared earlier
-    # 2nd param: list of input sequences' respective outputs
-    # 3rd param: nb epochs = nb iterations (200 used in tutorial)
-    # 4th param: nb of samples in the batch propagated through network
     model.fit(network_input, network_output, epochs=EPOCHS, batch_size=BATCH, callbacks=callbacks_list)
 
 def train():

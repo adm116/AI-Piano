@@ -1,23 +1,27 @@
 import collections
 import os
 import glob
-import sys
+import argparse
 import pickle
+import sys
 import numpy
 import matplotlib.pyplot as plt
 from pathlib import Path
 from music21 import converter, instrument, note, chord, stream, interval, pitch
 from pathlib import Path
 
-DATA_DIR = sys.argv[1]                          # data directory
-USE_PICKLE_NOTES = sys.argv[2] == 'true'        # false if don't want to read from old pickle file else true
-HAS_LIMIT = sys.argv[3] == 'true'               # true if want to limit num files else false for all files
-if HAS_LIMIT:
-    LIMIT = int(sys.argv[4])                    # if want a limit, this is the number of files
-    SHOW_GRAPH = sys.argv[5] == 'true'          # whether or not to show the frequency graph
-else:
-    SHOW_GRAPH = sys.argv[4] == 'true'
-PICKLE_NOTES = DATA_DIR + '/notes'              # note file to put pickle info
+parser = argparse.ArgumentParser()
+parser.add_argument('--dir', help="a directory", type= str)
+parser.add_argument('--use_old_notes', help="whether or not to use old pickle notes", type= str, default='false')
+parser.add_argument('--limit', help="number of limited files to use", type= int, default=-1)
+parser.add_argument('--graph', help="whether to show a plot of frequencies", type= str, default='false')
+args = parser.parse_args(sys.argv[1:])
+
+DATA_DIR = args.dir
+USE_OLD_NOTES = args.use_old_notes.lower() == 'true'
+LIMIT = args.limit
+SHOW_GRAPH = args.graph.lower() == 'true'
+PICKLE_NOTES = DATA_DIR + '/notes'
 
 
 def isEighthNoteOffset(element):
@@ -25,7 +29,7 @@ def isEighthNoteOffset(element):
 
 def getNotes():
     pickle_notes = Path(PICKLE_NOTES)
-    if USE_PICKLE_NOTES and pickle_notes.is_file():
+    if USE_OLD_NOTES and pickle_notes.is_file():
         print('Using previous notes stored')
         with open(PICKLE_NOTES, 'rb') as filepath:
             return pickle.load(filepath)
@@ -34,7 +38,7 @@ def getNotes():
     for file in glob.glob(DATA_DIR + '/*.mid'):
         files.append(file)
 
-    if HAS_LIMIT:
+    if LIMIT != -1:
         files = numpy.random.choice(files, LIMIT)
 
     notes = []
@@ -74,22 +78,31 @@ def getNotes():
 
     return notes
 
+def getFreq(notes):
+    pitchnames = sorted(set(item for item in notes))
+    note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
+    freq = collections.defaultdict(int)
+    for n in notes:
+        freq[note_to_int[n]] += 1
+    return freq
 
-notes = getNotes()
-pitchnames = sorted(set(item for item in notes))
-note_to_int = dict((note, number) for number, note in enumerate(pitchnames))
-freq = collections.defaultdict(int)
-for n in notes:
-    freq[note_to_int[n]] += 1
+def graph(freq):
+    x = []
+    y = []
+    for n in freq.keys():
+        x.append(n)
+        y.append(freq[n])
 
-x = []
-y = []
-for n in freq.keys():
-    x.append(n)
-    y.append(freq[n])
+    plt.plot(x, y, '.')
+    plt.ylabel('number of occurences')
+    plt.xlabel('note')
+    if SHOW_GRAPH:
+        plt.show()
 
-plt.plot(x, y, '.')
-plt.ylabel('number of occurences')
-plt.xlabel('note')
-if SHOW_GRAPH:
-    plt.show()
+def parse():
+    notes = getNotes()
+    freq = getFreq(notes)
+    graph(freq)
+
+if __name__ == '__main__':
+    parse()

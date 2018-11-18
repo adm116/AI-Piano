@@ -1,6 +1,7 @@
 
 import os
 import sys
+import argparse
 import tensorflow
 import numpy
 import pickle
@@ -9,13 +10,21 @@ from tensorflow.python.keras import utils
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import GRU
 
-DATA_DIR = sys.argv[1]                              # data directory
-WEIGHTS = 'weights/' + DATA_DIR + '/' + sys.argv[2] # weight file to load from
-NOTES = int(sys.argv[3])                            # num notes to generate
-SEQ_LEN = int(sys.argv[4])                          # sequence length of inputs
-BATCH = int(sys.argv[5])                            # batch size
-PICKLE_NOTES = DATA_DIR + '/notes'                  # note file for where to read pickle data from
-OUTPUT = 'output/' + DATA_DIR                       # directory to put the output
+parser = argparse.ArgumentParser()
+parser.add_argument('--dir', help="a directory", type= str)
+parser.add_argument('--weights', help="weights file", type= str)
+parser.add_argument('--num_notes', help="number of notes to generate", type= int, default=200)
+parser.add_argument('--seq_len', help="length of sequences", type= int, default=100)
+parser.add_argument('--batch_size', help="batch size", type= int, default=128)
+args = parser.parse_args(sys.argv[1:])
+
+DATA_DIR = args.dir
+WEIGHTS = 'weights/' + DATA_DIR + '/' + args.weights
+NUM_NOTES = args.num_notes
+SEQ_LEN = args.seq_len
+BATCH = args.batch_size
+PICKLE_NOTES = DATA_DIR + '/notes'                      
+OUTPUT = 'output/' + DATA_DIR
 
 def generateOutput(network_input, n_vocab, model, pitchnames):
     # Load the weights to each node
@@ -24,7 +33,7 @@ def generateOutput(network_input, n_vocab, model, pitchnames):
     pattern = network_input[start]
 
     prediction_output = []
-    for note_index in range(NOTES):
+    for note_index in range(NUM_NOTES):
         prediction_input = numpy.reshape(pattern, (1, SEQ_LEN, 1))
         prediction_input = prediction_input / float(n_vocab)
         prediction = model.predict(prediction_input, batch_size=BATCH, verbose=0)
