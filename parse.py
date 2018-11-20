@@ -35,6 +35,9 @@ def getNotes():
     for file in glob.glob(DATA_DIR + '/*.mid'):
         files.append(file)
 
+    for file in glob.glob(DATA_DIR + '/*.midi'):
+        files.append(file)
+
     if LIMIT != -1:
         files = numpy.random.choice(files, LIMIT)
 

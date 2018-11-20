@@ -35,7 +35,6 @@ def generateOutput(network_input, n_vocab, model, pitchnames):
     prediction_output = []
     for note_index in range(NUM_NOTES):
         prediction_input = numpy.reshape(pattern, (1, SEQ_LEN, 1))
-        prediction_input = prediction_input / float(n_vocab)
         prediction = model.predict(prediction_input, batch_size=BATCH, verbose=0)
         index = numpy.argmax(prediction)
         result = int_to_note[index]
@@ -62,13 +61,14 @@ def getNetworkInputOuput(notes, n_vocab, pitchnames):
     n_patterns = len(network_input)
 
     # reshape the input into a format compatible with LSTM layers
-    return numpy.reshape(network_input, (n_patterns, sequence_length, 1))
+    normalized_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
+
+    return (network_input, normalized_input)
 
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
-    model.add(GRU(128, return_sequences=True, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    model.add(GRU(n_vocab, activation='softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', dropout=0.6))
+    model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
     model.load_weights(WEIGHTS)
     return model
 
@@ -110,8 +110,8 @@ def generate():
 
     n_vocab = len(set(notes))
     pitchnames = sorted(set(item for item in notes))
-    network_input = getNetworkInputOuput(notes, n_vocab, pitchnames)
-    prediction_output = generateOutput(network_input, n_vocab, buildNetwork(network_input, n_vocab), pitchnames)
+    network_input, normalized = getNetworkInputOuput(notes, n_vocab, pitchnames)
+    prediction_output = generateOutput(network_input, n_vocab, buildNetwork(normalized, n_vocab), pitchnames)
     createMidi(prediction_output)
 
 if __name__ == '__main__':
