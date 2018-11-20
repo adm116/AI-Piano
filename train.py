@@ -56,7 +56,7 @@ def getNetworkInputOuput(notes, n_vocab):
 # Modeling
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
-    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', dropout=0.6))
+    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
     return model
 

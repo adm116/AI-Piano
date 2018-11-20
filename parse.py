@@ -44,6 +44,13 @@ def getNotes():
     notes = []
     for file in files:
         midi = converter.parseFile(file)
+
+        # transpose
+        key = midi.analyze('key')
+        transposeKey = 'A' if key.mode == 'minor' else 'C'
+        i = interval.Interval(note.Note(key.tonicPitchNameWithCase), note.Note(transposeKey))
+        midi = midi.transpose(i)
+
         notes_to_parse = None
         parts = instrument.partitionByInstrument(midi)
         if parts: # file has instrument parts
