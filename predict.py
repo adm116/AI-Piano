@@ -6,6 +6,7 @@ import tensorflow
 import numpy
 import pickle
 import random
+import time
 from music21 import converter, instrument, note, chord, stream
 from tensorflow.python.keras import utils
 from tensorflow.python.keras.models import Sequential
@@ -27,6 +28,20 @@ SEQ_LEN = args.seq_len
 BATCH = args.batch_size
 PICKLE_NOTES = DATA_DIR + '/notes'
 OUTPUT = 'output/' + DATA_DIR
+TOP_NOTES = 10 # choose top TOP_NOTES from predictions
+
+def getProbs(prediction, top):
+    probs = []
+    total = 0
+    for t in top:
+        p = prediction[t]
+        total += p
+        probs.append(p)
+
+    for p in range(0, len(probs)):
+        probs[p] = probs[p] / total
+
+    return probs
 
 def generateOutput(network_input, n_vocab, model, pitchnames):
     # Load the weights to each node
@@ -37,9 +52,15 @@ def generateOutput(network_input, n_vocab, model, pitchnames):
     prediction_output = []
     for note_index in range(NUM_NOTES):
         prediction_input = numpy.reshape(pattern, (1, SEQ_LEN, 1))
+        prediction_input = prediction_input / float(n_vocab) # normalize
         prediction = model.predict(prediction_input, batch_size=BATCH, verbose=0)
-        top = numpy.argsort(-prediction[0])[:15]
-        index = numpy.random.choice(top, 1)[0] #numpy.argmax(prediction)
+
+        # get top TOP_NOTES notes and create prob distribution
+        top = numpy.argsort(-prediction[0])[:TOP_NOTES]
+        probs = getProbs(prediction[0], top)
+
+        # choose note from top based on probs distribution
+        index = numpy.random.choice(top, 1, probs)[0] # numpy.argmax(prediction)
         result = int_to_note[index]
         print(result)
         prediction_output.append(result)
@@ -65,13 +86,12 @@ def getNetworkInputOuput(notes, n_vocab, pitchnames):
 
     # reshape the input into a format compatible with LSTM layers
     normalized_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
-
     return (network_input, normalized_input)
 
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     model.load_weights(WEIGHTS)
     return model
 
@@ -110,7 +130,10 @@ def createMidi(prediction_output):
 
     if not os.path.exists(OUTPUT):
         os.makedirs(OUTPUT)
-    midi_stream.write('midi', fp= OUTPUT + '/output.mid')
+
+    ts = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+    outFile = OUTPUT + '/' + ts + '_output.mid'
+    midi_stream.write('midi', fp= outFile)
 
 def generate():
     with open(PICKLE_NOTES, 'rb') as filepath:

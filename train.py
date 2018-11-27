@@ -51,13 +51,15 @@ def getNetworkInputOuput(notes, n_vocab):
 
     n_patterns = len(network_input)
     network_input = numpy.reshape(network_input, (n_patterns, sequence_length, 1))
+    network_input = network_input / float(n_vocab)
+    network_output = utils.to_categorical(network_output)
     return (network_input, network_output)
 
 # Modeling
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    model.compile(loss='sparse_categorical_crossentropy', optimizer='rmsprop')
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 
 def trainModel(network_input, network_output, model):
