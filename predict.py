@@ -28,7 +28,7 @@ SEQ_LEN = args.seq_len
 BATCH = args.batch_size
 PICKLE_NOTES = DATA_DIR + '/notes'
 OUTPUT = 'output/' + DATA_DIR
-TOP_NOTES = 10 # choose top TOP_NOTES from predictions
+TOP_NOTES = 20 # choose top TOP_NOTES from predictions
 
 def getProbs(prediction, top):
     probs = []
