@@ -78,8 +78,8 @@ def getFreq(notes):
         freq[note_to_int[n]] += 1
     return freq
 
-def graph(freq):
-    x = []
+def graph(notes):
+    freq = getFreq(notes)
     y = []
     for n in freq.keys():
         y.append(freq[n])
@@ -90,10 +90,10 @@ def graph(freq):
     plt.show()
 
 def parse():
+    print("Reading in notes...")
     notes = getNotes()
-    freq = getFreq(notes)
     if SHOW_GRAPH:
-        graph(freq)
+        graph(notes)
 
 if __name__ == '__main__':
     parse()
