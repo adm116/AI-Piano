@@ -29,7 +29,7 @@ BATCH = args.batch_size
 PICKLE_NOTES = DATA_DIR + '/notes'          # note file to put pickle info
 WEIGHTS_PATH = 'weights/' + DATA_DIR        # path for where to put weights
 
-def getNetworkInputOuput(notes, n_vocab):
+def process(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
     sequence_length = SEQ_LEN
 
@@ -59,6 +59,8 @@ def getNetworkInputOuput(notes, n_vocab):
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
+    #model.add(GRU(128, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
+    #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
 
@@ -84,7 +86,7 @@ def train():
         notes = pickle.load(filepath)
 
     n_vocab = len(set(notes))
-    network_input, network_output = getNetworkInputOuput(notes, n_vocab)
+    network_input, network_output = process(notes, n_vocab)
     model = buildNetwork(network_input, n_vocab)
     print("Training model...")
     trainModel(network_input, network_output, model)

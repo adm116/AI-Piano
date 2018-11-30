@@ -28,7 +28,7 @@ SEQ_LEN = args.seq_len
 BATCH = args.batch_size
 PICKLE_NOTES = DATA_DIR + '/notes'
 OUTPUT = 'output/' + DATA_DIR
-TOP_NOTES = 20 # choose top TOP_NOTES from predictions
+TOP_NOTES = 25 # choose top TOP_NOTES from predictions
 
 def getProbs(prediction, top):
     probs = []
@@ -69,7 +69,7 @@ def generateOutput(network_input, n_vocab, model, pitchnames):
 
     return prediction_output
 
-def getNetworkInputOuput(notes, n_vocab, pitchnames):
+def process(notes, n_vocab, pitchnames):
     """ Prepare the sequences used by the Neural Network """
     sequence_length = SEQ_LEN
 
@@ -91,6 +91,9 @@ def getNetworkInputOuput(notes, n_vocab, pitchnames):
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
+    #model.add(GRU(128, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
+    #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
+
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     model.load_weights(WEIGHTS)
     return model
@@ -113,7 +116,7 @@ def createMidi(prediction_output):
             new_chord = chord.Chord(notes)
             new_chord.volume.velocity = 50
             new_chord.offset = offset
-            new_chord.duration.quarterLength = 0.5
+            #new_chord.duration.quarterLength = 0.5
             output_notes.append(new_chord)
         # pattern is a note
         else:
@@ -121,7 +124,7 @@ def createMidi(prediction_output):
             new_note.storedInstrument = instrument.Piano()
             new_note.volume.velocity = 50
             new_note.offset = offset
-            new_note.duration.quarterLength = 0.5
+            #new_note.duration.quarterLength = 0.5
             output_notes.append(new_note)
 
         offset += 0.5
@@ -141,7 +144,7 @@ def generate():
 
     n_vocab = len(set(notes))
     pitchnames = sorted(set(item for item in notes))
-    network_input, normalized = getNetworkInputOuput(notes, n_vocab, pitchnames)
+    network_input, normalized = process(notes, n_vocab, pitchnames)
     prediction_output = generateOutput(network_input, n_vocab, buildNetwork(normalized, n_vocab), pitchnames)
     createMidi(prediction_output)
 
