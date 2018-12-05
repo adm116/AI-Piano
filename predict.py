@@ -90,9 +90,9 @@ def process(notes, n_vocab, pitchnames):
 
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
-    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    #model.add(GRU(128, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
     #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
+    model.add(GRU(128, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
+    model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     model.load_weights(WEIGHTS)

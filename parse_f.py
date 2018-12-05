@@ -5,6 +5,7 @@ import argparse
 import pickle
 import sys
 import numpy
+import math
 import matplotlib.pyplot as plt
 from pathlib import Path
 from music21 import converter, instrument, note, chord, stream, interval, pitch
@@ -61,9 +62,9 @@ def getNotes():
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append((str(element.pitch), element.duration.quarterLength, element.volume.velocity))
+                notes.append((str(element.pitch), round(4 * element.duration.quarterLength) / 4))
             elif isinstance(element, chord.Chord):
-                notes.append(('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])), element.duration.quarterLength, element.volume.velocity))
+                notes.append(('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])), round(4 * element.duration.quarterLength) / 4))
 
     with open(PICKLE_NOTES, 'wb') as filepath:
         pickle.dump(notes, filepath)
