@@ -30,7 +30,9 @@ def getNotes():
     if USE_OLD_NOTES and pickle_notes.is_file():
         print('Using previous notes stored')
         with open(PICKLE_NOTES, 'rb') as filepath:
-            return pickle.load(filepath)
+            notes = pickle.load(filepath)
+            print(notes)
+            return notes
 
     files = []
     for file in glob.glob(DATA_DIR + '/*.mid'):
@@ -62,9 +64,9 @@ def getNotes():
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append((str(element.pitch), round(4 * element.duration.quarterLength) / 4))
+                notes.append((str(element.pitch), element.duration.quarterLength))
             elif isinstance(element, chord.Chord):
-                notes.append(('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])), round(4 * element.duration.quarterLength) / 4))
+                notes.append(('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])), element.duration.quarterLength))
 
     with open(PICKLE_NOTES, 'wb') as filepath:
         pickle.dump(notes, filepath)
