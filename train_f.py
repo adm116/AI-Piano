@@ -26,7 +26,7 @@ DATA_DIR = args.dir
 EPOCHS = args.epochs
 SEQ_LEN = args.seq_len
 BATCH = args.batch_size
-PICKLE_NOTES = DATA_DIR + '/notes'          # note file to put pickle info
+PICKLE_NOTES = DATA_DIR + '/notes_f'          # note file to put pickle info
 WEIGHTS_PATH = 'weights/' + DATA_DIR        # path for where to put weights
 
 def process(notes, n_vocab):

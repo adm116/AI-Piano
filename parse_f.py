@@ -22,7 +22,7 @@ DATA_DIR = args.dir
 USE_OLD_NOTES = args.use_old_notes.lower() == 'true'
 LIMIT = args.limit
 SHOW_GRAPH = args.graph.lower() == 'true'
-PICKLE_NOTES = DATA_DIR + '/notes'
+PICKLE_NOTES = DATA_DIR + '/notes_f'
 
 
 def getNotes():

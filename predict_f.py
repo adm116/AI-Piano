@@ -26,7 +26,7 @@ WEIGHTS = 'weights/' + DATA_DIR + '/' + args.weights
 NUM_NOTES = args.num_notes
 SEQ_LEN = args.seq_len
 BATCH = args.batch_size
-PICKLE_NOTES = DATA_DIR + '/notes'
+PICKLE_NOTES = DATA_DIR + '/notes_f'
 OUTPUT = 'output/' + DATA_DIR
 TOP_NOTES = 25 # choose top TOP_NOTES from predictions
 
