@@ -31,7 +31,6 @@ def getNotes():
         print('Using previous notes stored')
         with open(PICKLE_NOTES, 'rb') as filepath:
             notes = pickle.load(filepath)
-            print(notes)
             return notes
 
     files = []
@@ -64,9 +63,9 @@ def getNotes():
         offsets = collections.defaultdict(list)
         for element in notes_to_parse:
             if isinstance(element, note.Note):
-                notes.append((str(element.pitch), element.duration.quarterLength))
+                notes.append((str(element.pitch), element.offset))
             elif isinstance(element, chord.Chord):
-                notes.append(('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])), element.duration.quarterLength))
+                notes.append(('.'.join(sorted([str(note.Note(n).pitch) for n in element.normalOrder])), element.offset))
 
     with open(PICKLE_NOTES, 'wb') as filepath:
         pickle.dump(notes, filepath)
