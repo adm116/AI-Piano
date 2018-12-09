@@ -20,12 +20,14 @@ parser.add_argument('--dir', help="a directory", type= str)
 parser.add_argument('--epochs', help="number of epochs", type= int, default=200)
 parser.add_argument('--seq_len', help="length of sequences", type= int, default=100)
 parser.add_argument('--batch_size', help="batch size", type= int, default=128)
+parser.add_argument('--hidden', help="hidden layer size", type= int, default=128)
 args = parser.parse_args(sys.argv[1:])
 
 DATA_DIR = args.dir
 EPOCHS = args.epochs
 SEQ_LEN = args.seq_len
 BATCH = args.batch_size
+HIDDEN = args.hidden
 PICKLE_NOTES = DATA_DIR + '/notes'          # note file to put pickle info
 WEIGHTS_PATH = 'weights/' + DATA_DIR        # path for where to put weights
 
@@ -59,7 +61,7 @@ def process(notes, n_vocab):
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    model.add(GRU(128, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
+    model.add(GRU(HIDDEN, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model

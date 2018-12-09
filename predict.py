@@ -19,6 +19,8 @@ parser.add_argument('--weights', help="weights file", type= str)
 parser.add_argument('--num_notes', help="number of notes to generate", type= int, default=200)
 parser.add_argument('--seq_len', help="length of sequences", type= int, default=100)
 parser.add_argument('--batch_size', help="batch size", type= int, default=128)
+parser.add_argument('--hidden', help="hidden layer size", type= int, default=128)
+parser.add_argument('--top_notes', help="number of top notes", type= int, default=25)
 args = parser.parse_args(sys.argv[1:])
 
 DATA_DIR = args.dir
@@ -26,9 +28,10 @@ WEIGHTS = 'weights/' + DATA_DIR + '/' + args.weights
 NUM_NOTES = args.num_notes
 SEQ_LEN = args.seq_len
 BATCH = args.batch_size
+HIDDEN = args.hidden
 PICKLE_NOTES = DATA_DIR + '/notes'
 OUTPUT = 'output/' + DATA_DIR
-TOP_NOTES = 25 # choose top TOP_NOTES from predictions
+TOP_NOTES = args.top_notes # choose top TOP_NOTES from predictions
 
 def getProbs(prediction, top):
     probs = []
@@ -91,7 +94,7 @@ def process(notes, n_vocab, pitchnames):
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    model.add(GRU(128, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
+    model.add(GRU(HIDDEN, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
 
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
