@@ -88,6 +88,7 @@ def graph(notes):
     plt.ylabel('number of occurences')
     plt.xlabel('tokens sorted by freq')
     plt.show()
+    print(sum(y))
 
 def parse():
     print("Reading in notes...")
