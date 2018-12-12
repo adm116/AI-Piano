@@ -62,8 +62,7 @@ def process(notes, n_vocab):
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
     #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
-    model.add(GRU(HIDDEN, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
-    model.add(Dropout(0.2))
+    model.add(GRU(HIDDEN, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True, dropout=0.2))
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
     return model
