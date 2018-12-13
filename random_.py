@@ -1,62 +1,57 @@
 
 import os
+import sys
+import pickle
 import collections
+import argparse
+import time
 from random import randint
 from music21 import converter, instrument, note, chord, stream
 
-notes = set()
-files = []
-limit = 10
+parser = argparse.ArgumentParser()
+parser.add_argument('--dir', help="a directory", type= str)
+args = parser.parse_args(sys.argv[1:])
 
-# find all files
-for file in os.listdir("data"):
-	if file.split(".")[-1] == 'mid':
-		files.append(file)
+DATA_DIR = args.dir
+PICKLE_NOTES = DATA_DIR + '/notes'
+OUTPUT = 'output/' + DATA_DIR
 
-# choose limit files at random
-for i in range(0, limit):
-	file = files[randint(0, len(files) - 1)]
-	midi = converter.parseFile("data/" + file)
-	notes_to_parse = None
-	parts = instrument.partitionByInstrument(midi)
-	if parts: # file has instrument parts
-		notes_to_parse = parts.parts[0].recurse()
-	else: # file has notes in a flat structure
-		notes_to_parse = midi.flat.notes
+notes = []
+with open(PICKLE_NOTES, 'rb') as filepath:
+	notes = pickle.load(filepath)
 
-	songNotes = []
-	for element in notes_to_parse:
-		if isinstance(element, note.Note):
-			curNote = str(element.pitch)
-			notes.add(curNote)
-		elif isinstance(element, chord.Chord):
-			curNote = '.'.join(str(n) for n in element.normalOrder)
-			notes.add(curNote)
-
-# choose all random notes
-offset = 0 # don't stack notes on top of each other
-output_notes = []
+notes = set(notes)
 notesList = list(notes)
-for i in range(0, 50):
-    cur = notesList[randint(0, len(notesList) - 1)]
-    if ('.' in cur) or cur.isdigit():
-	    notes_in_chord = cur.split('.')
-	    notes = []
-	    for current_note in notes_in_chord:
-	        new_note = note.Note(int(current_note))
-	        new_note.storedInstrument = instrument.Piano()
-	        notes.append(new_note)
-	    new_chord = chord.Chord(notes)
-	    new_chord.offset = offset
-	    output_notes.append(new_chord)
-    else:
-        new_note = note.Note(cur)
-        new_note.offset = offset
-        new_note.storedInstrument = instrument.Piano()
-        output_notes.append(new_note)
+offset = 0
+output_notes = []
 
-    cur = notesList[randint(0, len(notesList) - 1)]
-    offset += 0.5
+for i in range(0, 100):
+	cur = notesList[randint(0, len(notesList) - 1)]
+	print(cur)
+	if ('.' in cur) or cur.isdigit():
+		notes_in_chord = cur.split('.')
+		notes = []
+		for current_note in notes_in_chord:
+		    new_note = note.Note(current_note)
+		    new_note.storedInstrument = instrument.Piano()
+		    notes.append(new_note)
+		new_chord = chord.Chord(notes)
+		new_chord.offset = offset
+		new_chord.volume.velocity = 50
+		output_notes.append(new_chord)
+	else:
+		new_note = note.Note(cur)
+		new_note.offset = offset
+		new_note.volume.velocity = 50
+		new_note.storedInstrument = instrument.Piano()
+		output_notes.append(new_note)
+
+	offset += 0.5
 
 midi_stream = stream.Stream(output_notes)
-midi_stream.write('midi', fp='test_output.mid')
+if not os.path.exists(OUTPUT):
+	os.makedirs(OUTPUT)
+
+ts = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+outFile = OUTPUT + '/' + ts + '_output.mid'
+midi_stream.write('midi', fp= outFile)
