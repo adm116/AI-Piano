@@ -93,7 +93,6 @@ def process(notes, n_vocab, pitchnames):
 
 def buildNetwork(network_input, n_vocab):
     model = Sequential() # linear stack of layers
-    #model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
     model.add(GRU(HIDDEN, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax', return_sequences=True))
     model.add(GRU(n_vocab, input_shape=(network_input.shape[1], network_input.shape[2]), activation='softmax'))
 
@@ -119,7 +118,6 @@ def createMidi(prediction_output):
             new_chord = chord.Chord(notes)
             new_chord.volume.velocity = 50
             new_chord.offset = offset
-            #new_chord.duration.quarterLength = 0.5
             output_notes.append(new_chord)
         # pattern is a note
         else:
@@ -127,7 +125,6 @@ def createMidi(prediction_output):
             new_note.storedInstrument = instrument.Piano()
             new_note.volume.velocity = 50
             new_note.offset = offset
-            #new_note.duration.quarterLength = 0.5
             output_notes.append(new_note)
 
         offset += 0.5
