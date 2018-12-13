@@ -1,15 +1,15 @@
 
 import os
+import time
+import sys
+import argparse
 import util
 import collections
 import math
 from random import randint
 from music21 import converter, instrument, note, chord, stream
-START = '#begin'
-LIMIT = 10
-NOTE_SIZE = 88 # num notes playable on piano
-NOTE_LIMIT = 50	# num notes in output
 
+START = '#begin'
 ##############################################################################
 #Model
 class MusicProblem(util.SearchProblem):
@@ -31,6 +31,19 @@ class MusicProblem(util.SearchProblem):
 ##############################################################################
 # Setting up problem
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--dir', help="a directory", type= str)
+parser.add_argument('--limit', help="number of limited files to use", type= int, default=10)
+parser.add_argument('--num_notes', help="number of notes to generate", type= int, default=100)
+args = parser.parse_args(sys.argv[1:])
+
+DATA_DIR = args.dir
+OUTPUT = 'output/' + DATA_DIR
+LIMIT = args.limit
+NUM_NOTES = args.num_notes
+NOTE_SIZE = 88 # num notes playable on piano
+
+
 files = []										# all midi files
 chosen = set()									# keep track of which files we are using to "train" on
 followers = collections.defaultdict(set) 	# what notes follow me ?
@@ -38,13 +51,13 @@ counts = collections.defaultdict(int)		# (lastNote, curNote) -> num occurences
 bitotalCounts = collections.defaultdict(int) # number of times any note follows a note x
 
 # find all files
-for file in os.listdir("data"):
+for file in os.listdir(DATA_DIR):
 	if file.split(".")[-1] == 'mid':
 		files.append(file)
 
 for i in range(0, LIMIT):
 	file = files[randint(0, len(files) - 1)]
-	midi = converter.parseFile("data/" + file)
+	midi = converter.parseFile(DATA_DIR + '/' + file)
 	notes_to_parse = None
 	parts = instrument.partitionByInstrument(midi)
 	if parts:
@@ -57,7 +70,8 @@ for i in range(0, LIMIT):
 		if isinstance(notes_to_parse[e], note.Note):
 			notes.append(str(notes_to_parse[e].pitch))
 		elif isinstance(notes_to_parse[e], chord.Chord):
-		    notes.append('.'.join(str(n) for n in notes_to_parse[e].normalOrder))
+		    notes.append('.'.join(sorted([str(note.Note(n).pitch) for n in notes_to_parse[e].normalOrder])))
+
 	for e in range(0, len(notes)-1):
 		curNote = notes[e]
 		nextNote = notes[e+1]
@@ -80,9 +94,8 @@ for cur in followers:
 ##############################################################################
 # solve problem
 ucs = util.UniformCostSearch(verbose=1)
-ucs.solve(MusicProblem(costs, NOTE_LIMIT, followers))
+ucs.solve(MusicProblem(costs, NUM_NOTES, followers))
 output = ucs.actions
-print(output)
 
 # create output
 output_notes = []
@@ -92,7 +105,7 @@ for cur in output:
 	    notes_in_chord = cur.split('.')
 	    notes = []
 	    for current_note in notes_in_chord:
-	        new_note = note.Note(int(current_note))
+	        new_note = note.Note(current_note)
 	        new_note.storedInstrument = instrument.Piano()
 	        notes.append(new_note)
 	    new_chord = chord.Chord(notes)
@@ -106,4 +119,9 @@ for cur in output:
 	offset += 0.5
 
 midi_stream = stream.Stream(output_notes)
-midi_stream.write('midi', fp='test_output.mid')
+if not os.path.exists(OUTPUT):
+	os.makedirs(OUTPUT)
+
+ts = time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())
+outFile = OUTPUT + '/' + ts + '_output.mid'
+midi_stream.write('midi', fp= outFile)
