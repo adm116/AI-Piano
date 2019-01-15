@@ -1,5 +1,7 @@
 Project code inspired by: https://towardsdatascience.com/how-to-generate-music-using-a-lstm-neural-network-in-keras-68786834d4c5
 
+All code found in the code folder. Sample outputs can be found in the output folder.
+
 Parsing Notes:
   In order to run anything, you must first run parse.py which will parse the
 MIDI files of a folder into notes/chords and store them in a pickle files to
