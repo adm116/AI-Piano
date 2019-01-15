@@ -1,6 +1,10 @@
 Project code inspired by: https://towardsdatascience.com/how-to-generate-music-using-a-lstm-neural-network-in-keras-68786834d4c5
 
+Final report: https://www.dropbox.com/s/elguipe5a9h7nib/final_report.pdf?dl=0
+
 All code found in the code folder. Sample outputs can be found in the output folder.
+
+##############################################################################
 
 Parsing Notes:
   In order to run anything, you must first run parse.py which will parse the
